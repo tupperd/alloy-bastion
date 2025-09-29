@@ -1,28 +1,23 @@
-# 0) Ensure the namespace exists (safe to apply even if it already does)
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: alloy
 ---
 # 1) Simple log generator Deployment (no Service needed)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: bm-log-generator
-  namespace: alloy
+  name: log-generator
+  namespace: bastion-example
   labels:
-    app.kubernetes.io/name: bm-log-generator   # <-- used by your transform as service.name
-    app: bm-log-generator                      # <-- optional alias if you also map plain 'app'
+    app.kubernetes.io/name: log-generator   # <-- used by your transform as service.name
+    app: log-generator                      # <-- optional alias if you also map plain 'app'
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: bm-log-generator
+      app.kubernetes.io/name: log-generator
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: bm-log-generator
-        app: bm-log-generator
+        app.kubernetes.io/name: log-generator
+        app: log-generator
     spec:
       terminationGracePeriodSeconds: 5
       containers:
@@ -66,7 +61,7 @@ spec:
                 case $((RANDOM % 10)) in
                   0) lvl="error";; 1|2) lvl="warn";; *) lvl="info";;
                 esac
-                printf '{"timestamp":"%s","level":"%s","message":"hello from bm-log-generator","service_name":"%s","pod":"%s","namespace":"%s","node":"%s","sequence":%d}\n' \
+                printf '{"timestamp":"%s","level":"%s","message":"hello from log-generator","service_name":"%s","pod":"%s","namespace":"%s","node":"%s","sequence":%d}\n' \
                        "$ts" "$lvl" "$SERVICE_NAME" "$POD_NAME" "$POD_NAMESPACE" "$NODE_NAME" "$i"
                 usleep $(( (${RATE_MS:-500}) * 1000 ))
               done

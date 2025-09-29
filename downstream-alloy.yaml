@@ -1,8 +1,8 @@
-nameOverride: alloy-bastion
+nameOverride: alloy-downstream
 
 controller:
   type: deployment
-  replicas: 2
+  replicas: 1
 
 ingress:
   enabled: false
@@ -53,9 +53,5 @@ alloy:
             username = sys.env("GC_LOKI_USERNAME")
             password = sys.env("GC_LOKI_API_KEY")
           }
-        }
-        external_labels = {
-          pipeline = "loki",
-          stage    = "bastion",
         }
       }

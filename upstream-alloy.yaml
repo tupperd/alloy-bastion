@@ -1,4 +1,3 @@
-# upstream.yaml
 nameOverride: alloy-upstream
 
 controller:
@@ -10,11 +9,11 @@ alloy:
     create: true
     name: alloy-upstream-config
     content: |
-      // ---------- Discover & scrape pod logs (only alloy ns) ----------
+      // ---------- Discover & scrape pod logs ----------
       discovery.kubernetes "pods" {
         role = "pod"
         namespaces {
-          names = ["alloy"]
+          names = ["bastion-example"]
         }
       }
 
@@ -71,38 +70,19 @@ alloy:
         }
       }
 
-      // ---------- Loki JSON parse + label promotion (Option B) ----------
-      // Parses JSON lines and promotes service_name (and some fields) into Loki labels/fields
-      loki.process "json_promote" {
-        stage.json {
-          expressions = {
-            service_name = "service_name",
-            level        = "level",
-            message      = "message",
-          }
-        }
-        // If service_name exists in the JSON, add it as a stream label
-        stage.labels {
-          values = { service_name = "{{ .service_name }}" }
-        }
-        forward_to = [loki.write.to_bastion.receiver]
-      }
-
       // Tail stdout; now route through the json_promote process
       loki.source.kubernetes "pods" {
         targets    = discovery.relabel.pods.output
-        forward_to = [loki.process.json_promote.receiver]
+        forward_to = [loki.write.to_bastion.receiver]
       }
 
       // ---------- Send Loki logs to bastion (HTTP push) ----------
       loki.write "to_bastion" {
         endpoint {
-          url = "http://bm-bastion-alloy-bastion:3100/loki/api/v1/push"
+          url = "http://downstream-alloy-downstream:3100/loki/api/v1/push"
         }
         external_labels = {
-          cluster  = "tupper-demo",
-          pipeline = "loki",
-          stage    = "upstream",
+          pipeline = "bastion-demo",
         }
       }
 
